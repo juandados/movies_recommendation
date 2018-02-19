@@ -1,3 +1,4 @@
 /ml-20m/*
+.ipynb_checkpoints/
 *.swp
 *.swo
