@@ -4,7 +4,7 @@ In this repository is developed a simple recommendation engine for movies using 
 ## Extracting Information from the Data Set.
 Ratings of many movies given for four reviewers (users) are avaliable in the 
 
-## Develop guide 
+## Development guide 
 Read this [guide](https://github.com/juandados/movies_recommendation/blob/master/movie_recomender_development_guide.ipynb) to get details about how this system was developed.
 
 ## How to execute it
