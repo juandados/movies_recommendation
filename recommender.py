@@ -2,7 +2,50 @@ import sys
 import json
 import pandas as pd
 import numpy as np
+import os
+import re
+from collections import Counter
 from scipy.sparse.linalg import svds
+
+class DataLoader:
+    base_dir = "./cornell-data/scale_whole_review/scale_whole_review/{}/txt.parag"
+    review_titles = {}
+    
+    def __init__(self, name):
+        self.name = name
+        if name == "Dennis+Schwartz":
+            self.title_setter = self.title_setter_by_director_token
+        else:
+            self.title_setter = self.title_setter_by_frequence
+    
+    def filling_reviews_titles(self):
+        directory = self.base_dir.format(self.name)
+        #Selecting an title setter:
+        review_files = os.listdir(directory)
+        for review_file in review_files:
+            review_text = self.open_file(directory,review_file)
+            review_id = int(re.split("\.",review_file)[0])
+            s = self.title_setter(review_text, review_id)
+            
+    def open_file(self,directory,review_file):
+        with open("{}/{}".format(directory,review_file), "rb") as file:
+            text_review = file.read().decode('utf-8',errors='ignore')
+        return text_review
+    
+    def title_setter_by_director_token(self,review_text, review_id): 
+        try:
+            title = re.findall('([A-Z,.\:\-\!\/\'\s\d]+)\s+.*\([dD]irect', review_text)
+            self.review_titles[review_id] = re.split("\,",title[0])[0]
+        except:
+            pass
+
+    def title_setter_by_frequence(self,review_text, review_id):
+        try:
+            words_array = re.findall('([A-Z][A-Z\:\-\!\/\'\s\d]+) [a-z]',review_text)
+            title = Counter(words_array).most_common(1)[0][0]
+            self.review_titles[review_id] = title
+        except:
+            pass
 
 class MovieRecommender:
 
@@ -63,8 +106,26 @@ class MovieRecommender:
 
 if __name__ == '__main__':
     try:
-        ratings_df = pd.read_csv("./ml-latest-small/ratings.csv")
-        movies_df = pd.read_csv("./ml-latest-small/movies.csv")
+        names = ["Dennis+Schwartz","James+Berardinelli","Scott+Renshaw","Steve+Rhodes"]
+        for name in names:
+            data_loader = DataLoader(name)
+            data_loader.filling_reviews_titles()
+        movies_df = pd.DataFrame([DataLoader.review_titles],index=["movieId"]).T
+        movies_df.reset_index(inplace=True)
+        movies_df.rename(columns={"index":"reviewId"},inplace=True) 
+        movies_df["title"] = movies_df["movieId"]
+        id_base_dir = "./cornell-data/scale_data/scaledata/{}/id.{}"
+        rating_base_dir = "./cornell-data/scale_data/scaledata/{}/rating.{}"
+        ratings = pd.DataFrame([],columns=["reviewId","rating","userId"])
+        for name in names:
+            rates = pd.read_table(rating_base_dir.format(name,name),names=["rating"])
+            ids = pd.read_table(id_base_dir.format(name,name),names=["reviewId"])
+            user_ratings = pd.concat([ids,rates],axis=1)
+            user_ratings["userId"] = name
+            ratings = pd.concat([ratings,user_ratings])
+        ratings_df = pd.merge(ratings,movies_df, on="reviewId")
+        ratings_df = ratings_df.groupby(["userId","movieId"]).head(1)
+
         inputs = json.loads(sys.argv[1])
         # Load the data to the MovieRecommender class
         MovieRecommender.load_data_set(ratings_df = ratings_df, movies_df = movies_df)
