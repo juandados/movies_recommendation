@@ -6,6 +6,7 @@ import os
 import re
 from collections import Counter
 from scipy.sparse.linalg import svds
+from numpy.linalg import norm
 
 class DataLoader:
     base_dir = "./cornell-data/scale_whole_review/scale_whole_review/{}/txt.parag"
@@ -41,7 +42,7 @@ class DataLoader:
 
     def title_setter_by_frequence(self,review_text, review_id):
         try:
-            words_array = re.findall('([A-Z][A-Z\:\-\!\/\'\s\d]+) [a-z]',review_text)
+            words_array = re.findall('([A-Z][A-Z\:\-\!\/\'\s\d\&]+) [a-z]',review_text)
             title = Counter(words_array).most_common(1)[0][0]
             self.review_titles[review_id] = title
         except:
@@ -75,24 +76,22 @@ class MovieRecommender:
         '''
         It makes a specified number of recommendations, based on higher estimated ratings
         '''
-
-        '''
-        cls = self.__class__
-        print(cls.R_df)
-        ratings = cls.R_df.loc[self.userId]
+        ratings = self.R_df.loc[self.userId]
         self.best_ranked_movies = ratings[ratings>0.7].sort_values(ascending=False).head(historical_limit)
         ## Selecting Features for unseen movies
-        Vt_df = pd.DataFrame(Vt,columns=R_df.columns)
+        Vt_df = pd.DataFrame(self.Vt,columns=self.R_df.columns)
         unseen_movies = Vt_df[self.R_df.columns[ratings == -1]]
         ### Calculating Distances over Vt Matrix
         differences = []
         for movie in Vt_df[self.best_ranked_movies.index].items():
             differences.append(unseen_movies.apply(lambda x: norm(x-movie[1])).values)
         distances = pd.DataFrame(differences,columns=unseen_movies.columns)
-        top_recommendations = list(distances.min().sort_values().head(limit).index)
-        return top_recommendations
-        '''
-        return "pass"
+        ds = list(set(distances.values.flatten())).sort()
+        indexes = distances.apply(lambda x: x.apply(lambda y: y in ds[:recommendations_limit]))
+        movie_lowest_score = distances[indexes].min()
+        top_recommendations = movie_lowest_score[~movie_lowest_score.isnull()].sort_values().head(recommendations_limit)
+        top_recommendations = pd.Series(top_recommendations.index)
+        return top_recommendations 
 
     def get_top_historical_ratings(self):
         return self.best_ranked_movies
@@ -122,29 +121,22 @@ if __name__ == '__main__':
         ratings_df = pd.merge(ratings,movies_df, on="reviewId")
         ### Droping duplicated reviews for a single user
         ratings_df = ratings_df.groupby(["userId","movieId"]).head(1)
-
         inputs = json.loads(sys.argv[1])
         # Load the data to the MovieRecommender class
         MovieRecommender.load_data_set(ratings_df = ratings_df, movies_df = movies_df)
         # Making Lower Rank Decomposition 
         MovieRecommender.matrix_decomposition()
-
         # Make an intance of the recommender
         recommender = MovieRecommender(userId = inputs["user id"])
-
         # Ask a list of recommendations
         print("-----------------------")
         print("Our recommendations are")
         print("-----------------------")
-
-        print(recommender.recommend(recomendations_limit = "Recommendations limit",4), historical_limit = inputs.setdefault("Historicals limit",10)).to_string())
-
-        '''
+        print(recommender.recommend(recommendations_limit =  inputs.setdefault("Recommendations limit",4), historical_limit = inputs.setdefault("Historical limit",10)))
         # To compare the above result call for the top historical of ratings for the given user
         print("----------------------")
         print("Because you watched...")
         print("----------------------")
         print(recommender.get_top_historical_ratings().to_string())
-        '''
     except:
         print("Something went wrong!")
