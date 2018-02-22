@@ -2,7 +2,7 @@
 In this repository is developed a simple recommendation engine for movies using collaborative filtering from lowrank matrix factorization inplemented in python. This project is based on data avaliable in the in this [movie reviews repository](http://www.cs.cornell.edu/people/pabo/movie-review-data/).
 
 ## Extracting Information from the Data Set.
-Ratings of many movies given for four reviewers (users) are avaliable in the path `/home/dell/movies_recommendation/cornell-data/scale_data`, however, they do not make reference to the movie title they are rating, instead they make reference to some natural language text, avaliable in `movies_recommendation/cornell-data/scale_whole_review/`, with the title inmerse on it. Due to this fact, text must be analyzed to get the movie title of each review.
+Ratings of many movies given for four reviewers (users) are avaliable in the path `/home/dell/movies_recommendation/cornell-data/scale_data`, however, they do not make reference to the movie title they are rating, instead they make reference to natural language texts avaliable in `movies_recommendation/cornell-data/scale_whole_review/`, with the title immerse on it. Due to this fact, text must be analyzed to get the movie title of each review.
 
 ## Development guide 
 Read this [guide](https://github.com/juandados/movies_recommendation/blob/master/movie_recomender_development_guide.ipynb) to get details about how this system was developed.
