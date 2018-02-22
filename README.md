@@ -13,7 +13,7 @@ This movie recommendation system is implemented in a python script. So a complet
 python recommender.py '{"user id":"Steve+Rhodes", "Recommendations limit": 5, "Historical limit":8}'
 ```
 ### Running it in Docker
-If you don't have a full python installation (e.g. one with anaconda 3) run the next lines after a install [Docker](https://docs.docker.com/install/).
+If you don't have a full python installation (e.g. one with anaconda 3) run the next lines after install [Docker](https://docs.docker.com/install/).
 ```bash
 sudo docker build -t movies_recomender .
 sudo docker run -ti -v $(pwd)/:/tmp movies_recomender python recommender.py '{"user id":"Steve+Rhodes", "Recommendations limit": 5, "Historical limit":8}'
