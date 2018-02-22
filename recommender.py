@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import sys
 import json
 import pandas as pd
@@ -86,7 +88,8 @@ class MovieRecommender:
         for movie in Vt_df[self.best_ranked_movies.index].items():
             differences.append(unseen_movies.apply(lambda x: norm(x-movie[1])).values)
         distances = pd.DataFrame(differences,columns=unseen_movies.columns)
-        ds = list(set(distances.values.flatten())).sort()
+        ds = list(set(distances.values.flatten()))
+        ds.sort()
         indexes = distances.apply(lambda x: x.apply(lambda y: y in ds[:recommendations_limit]))
         movie_lowest_score = distances[indexes].min()
         top_recommendations = movie_lowest_score[~movie_lowest_score.isnull()].sort_values().head(recommendations_limit)
